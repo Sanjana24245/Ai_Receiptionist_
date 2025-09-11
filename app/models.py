@@ -50,12 +50,12 @@ class UserResponse(BaseModel):
     role: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ✅ OTP related models
 class OTPRequest(BaseModel):
-    email: EmailStr
-
+    email: Optional[EmailStr] = None
+    contactnumber: Optional[str] = None
 class VerifyOTPRequest(BaseModel):
     otp: str
     otpToken: str
