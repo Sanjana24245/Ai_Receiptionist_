@@ -742,7 +742,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import RegisterForm from "./screens/Register";
 import LoginForm from "./screens/Login";
-
+import Chatbot from "./screens/Chatbot";
 export default function App() {
   return (
     <Router>
@@ -750,6 +750,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/login" element={<LoginForm />} />
+        <Route path="/chatbot" element={<Chatbot />} />
       </Routes>
     </Router>
   );

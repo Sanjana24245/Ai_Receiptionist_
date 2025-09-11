@@ -15,23 +15,22 @@ export default function RegisterForm({ onSwitch }) {
 
   const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [contactOtpSent, setContactOtpSent] = useState(false);
-
+const [contactOtpToken, setContactOtpToken] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
   const [contactVerified, setContactVerified] = useState(false);
+  const [emailOtp, setEmailOtp] = useState(new Array(6).fill(''));
+  const [contactOtp, setContactOtp] = useState(new Array(6).fill(''));
+  const emailOtpRefs = Array.from({ length: 6 }, () => useRef(null));
+  const contactOtpRefs = Array.from({ length: 6 }, () => useRef(null));
 
-  const [emailOtp, setEmailOtp] = useState(['', '', '', '']);
-  const [contactOtp, setContactOtp] = useState(['', '', '', '']);
-
-  const emailOtpRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
-  const contactOtpRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
-
-  const canSendEmailOtp = form.email.trim().length > 5 && form.email.includes('@');
+  const [otpToken, setOtpToken] = useState("");
+  const canSendEmailOtp = form.email.trim().length > 7 && form.email.includes('@');
   const canSendContactOtp = form.contactNumber.trim().length >= 10;
 
   const canVerifyEmailOtp = emailOtp.every(digit => digit.length === 1);
   const canVerifyContactOtp = contactOtp.every(digit => digit.length === 1);
 
-  const canProceed = emailVerified && contactVerified;
+  const canProceed = emailVerified ;
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -55,6 +54,7 @@ export default function RegisterForm({ onSwitch }) {
       email: form.email,
     });
     setEmailOtpSent(true);
+    setOtpToken(res.data.otpToken);
     alert(res.data.msg); // will show "OTP sent to your email. Please verify."
     console.log("OTP Token:", res.data.otpToken); // store it if needed for verification
   } catch (err) {
@@ -64,20 +64,50 @@ export default function RegisterForm({ onSwitch }) {
 };
 
 
-  const sendContactOtp = () => {
-    setContactOtpSent(true);
-    alert(`Simulated: OTP sent to contact ${form.contactNumber}`);
+//  const sendContactOtp = async () => {
+//   if (!canSendContactOtp) return;
+//   try {
+//     const res = await axios.post("http://localhost:8000/auth/send-contact-otp", {
+//       contactnumber: form.contactNumber,
+//     });
+//     setContactOtpSent(true);
+//     setContactOtpToken(res.data.otpToken);
+//     alert(res.data.msg);
+//   } catch (err) {
+//     alert(err.response?.data?.detail || "Failed to send OTP");
+//     setContactOtpSent(false);
+//   }
+// };
+
+  // ✅ Verify Email OTP
+  const verifyEmailOtp = async () => {
+    try {
+      const res = await axios.post("http://localhost:8000/auth/verify-otp", {
+        otpToken,
+        otp: emailOtp.join(""), // ✅ join 6 boxes into single string
+      });
+      setEmailVerified(true);
+      alert(res.data.msg); // "OTP verified successfully"
+    } catch (err) {
+      alert(err.response?.data?.detail || "OTP verification failed");
+      setEmailVerified(false);
+    }
   };
 
-  const verifyEmailOtp = () => {
-    setEmailVerified(true);
-    alert('Email OTP verified!');
-  };
-
-  const verifyContactOtp = () => {
-    setContactVerified(true);
-    alert('Contact OTP verified!');
-  };
+// const verifyContactOtp = async () => {
+//   try {
+//     const res = await axios.post("http://localhost:8000/auth/verify-otp", {
+//       otp: contactOtp.join(""),
+//       otpToken: contactOtpToken,
+      
+//     });
+//     setContactVerified(true);
+//     alert(res.data.msg);
+//   } catch (err) {
+//     alert(err.response?.data?.detail || "OTP verification failed");
+//     setContactVerified(false);
+//   }
+// };
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -207,17 +237,17 @@ export default function RegisterForm({ onSwitch }) {
         <div>
           <label className="block font-medium mb-1">Contact Number</label>
           <div className="flex space-x-2">
-            <input
-              type="tel"
-              name="contactNumber"
-              value={form.contactNumber}
-              onChange={e => setForm({ ...form, contactNumber: e.target.value.replace(/\D/g, '') })}
-              disabled={contactOtpSent}
-              className="flex-1 p-2 border rounded"
-              placeholder="Enter your contact number"
-              required
-            />
-            {!contactOtpSent && (
+           <input
+  type="tel"
+  name="contactNumber"
+  value={form.contactNumber}
+  onChange={handleChange}   // ✅ Add this back
+  className="flex-1 p-2 border rounded"
+  placeholder="Enter your contact number"
+  required
+/>
+
+            {/* {!contactOtpSent && (
               <button
                 type="button"
                 onClick={sendContactOtp}
@@ -228,9 +258,9 @@ export default function RegisterForm({ onSwitch }) {
               >
                 Send OTP
               </button>
-            )}
+            )} */}
           </div>
-          {contactOtpSent && !contactVerified && (
+          {/* {contactOtpSent && !contactVerified && (
             <div className="mt-2 flex space-x-2 justify-center">
               {contactOtp.map((digit, idx) => (
                 <input
@@ -257,10 +287,10 @@ export default function RegisterForm({ onSwitch }) {
                 Verify
               </button>
             </div>
-          )}
-          {contactVerified && (
+          )} */}
+          {/* {contactVerified && (
             <p className="text-green-600 mt-1 font-semibold text-center">Contact verified ✓</p>
-          )}
+          )} */}
         </div>
 
         {/* Role */}

@@ -11,6 +11,8 @@ from app.middleware.auth_middleware import authenticate
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
+otp_store = {}
+
 # Register
 @router.post("/register")
 async def register(user: UserRegister):
@@ -95,3 +97,28 @@ async def profile(user_data=Depends(authenticate)):
         raise HTTPException(status_code=404, detail="User not found")
     user.pop("password")
     return {"user": user}
+
+
+
+
+@router.post("/send-contact-otp")
+async def send_contact_otp(data: OTPRequest):
+    if not data.contactnumber:
+        raise HTTPException(status_code=400, detail="Contact number required")
+
+    otp = str(random.randint(100000, 999999))
+    token = create_access_token({"otp": otp, "type": "contact"}, expires=300)
+
+    otp_store[data.contactnumber] = otp
+    print(f"[DEBUG] Contact OTP sent to {data.contactnumber}: {otp}")  # Replace with SMS gateway later
+
+    return {"msg": "OTP sent to contact", "otpToken": token}
+
+@router.post("/auth/verify-otp")
+async def verify_otp(data: VerifyOTPRequest):
+    decoded = verify_token(data.otpToken)
+    if not decoded:
+        raise HTTPException(status_code=400, detail="OTP expired or invalid")
+    if decoded.get("otp") != data.otp:
+        raise HTTPException(status_code=400, detail="Incorrect OTP")
+    return {"msg": "OTP verified successfully"}
