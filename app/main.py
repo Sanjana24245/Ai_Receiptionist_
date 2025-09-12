@@ -3,7 +3,7 @@ from app.routes import auth
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-
+from app.routes import doctor
 
 app = FastAPI()
 origins = [
@@ -20,6 +20,7 @@ app.add_middleware(
 )
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(auth.router)
+app.include_router(doctor.router)
 @app.get("/favicon.ico")
 async def favicon():
     return FileResponse("app/static/favicon.ico")
