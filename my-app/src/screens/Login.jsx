@@ -1,92 +1,74 @@
-import React, { useState } from 'react';
-import { useNavigate } from "react-router-dom";
 
-export default function LoginForm({ onSwitch }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+import React, { useState, useContext } from "react";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
-  const canSubmit = email.trim().length > 5 && email.includes('@') && password.length > 0;
- const navigate = useNavigate();
-  const handleSubmit = e => {
+export default function LoginForm() {
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext); // ✅ use login function
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!canSubmit) {
-      alert('Please enter valid email and password.');
-      return;
-    }
-    alert(`Login submitted!\nEmail: ${email}\nPassword: ${password}`);
-  };
+    try {
+      const res = await axios.post("http://localhost:8000/auth/login", {
+        email,
+        password,
+      });
 
-  const handleForgetPassword = () => {
-    alert('Redirect to forget password flow (not implemented)');
+      // Store user in AuthContext
+      login(res.data.user, res.data.token);
+
+      navigate("/AnalyticsDashboard"); // redirect after login
+    } catch (err) {
+      setError(err.response?.data?.detail || "Login failed");
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded shadow-md w-full max-w-md space-y-6"
-      >
-        <h2 className="text-2xl font-bold text-center">Login</h2>
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
 
-        {/* Email */}
-        <div>
-          <label className="block font-medium mb-1">Email</label>
+        <div className="mb-4">
+          <label className="block mb-1">Email</label>
           <input
             type="email"
+            className="w-full px-3 py-2 border rounded-lg"
             value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="w-full p-2 border rounded"
-            placeholder="Enter your email"
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
 
-        {/* Password */}
-        <div>
-          <label className="block font-medium mb-1">Password</label>
+        <div className="mb-4">
+          <label className="block mb-1">Password</label>
           <input
             type="password"
+            className="w-full px-3 py-2 border rounded-lg"
             value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="w-full p-2 border rounded"
-            placeholder="Enter your password"
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
 
-        {/* Forgot Password */}
-        <div className="text-right">
-          <button
-            type="button"
-            onClick={handleForgetPassword}
-            className="text-blue-600 text-sm hover:underline"
-          >
-            Forgot Password?
-          </button>
-        </div>
+        {error && <p className="text-red-500 mb-3">{error}</p>}
 
-        {/* Submit */}
         <button
           type="submit"
-          disabled={!canSubmit}
-          className={`w-full py-2 rounded text-white ${
-            canSubmit
-              ? 'bg-green-600 hover:bg-green-700'
-              : 'bg-gray-400 cursor-not-allowed'
-          }`}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
         >
           Login
         </button>
 
-        {/* Switch to Register */}
         <p className="mt-4 text-center">
-          Don't have an account?{' '}
-            <button
-          onClick={() => navigate("/register")}
-          className="text-blue-600 underline"
-        >
-          Register here
-        </button>
+          Don’t have an account?{" "}
+          <Link to="/register" className="text-blue-600 hover:underline">
+            Register
+          </Link>
         </p>
       </form>
     </div>

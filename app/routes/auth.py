@@ -37,17 +37,32 @@ async def register(user: UserRegister):
     return {"msg": "User registered successfully. You can now login."}
 
 # Login
+# Login Route
+# app/routes/auth.py
+
 @router.post("/login")
 async def login(data: UserLogin):
-    user = await users_collection.find_one({"username": data.username})
-    if not user or not pwd_context.verify(data.password, user["password"]):
-        raise HTTPException(status_code=400, detail="Invalid username or password")
+    # Find user by email only
+    user = await users_collection.find_one({"email": data.email})
 
-    token = create_access_token({"id": str(user["_id"])})
+    if not user or not pwd_context.verify(data.password, user["password"]):
+        raise HTTPException(status_code=400, detail="Invalid email or password")
+
+    # Create JWT token
+    token = create_access_token({"id": str(user["_id"]), "role": user["role"]})
+
     return {
+        "msg": "Login successful",
         "token": token,
-        "user": {"id": str(user["_id"]), "username": user["username"], "email": user["email"]},
+        "user": {
+            "id": str(user["_id"]),
+            "username": user.get("username"),
+            "email": user["email"],
+            "role": user["role"],
+            "contactnumber": user.get("contactnumber")
+        },
     }
+
 
 # Send OTP
 # app/routes/auth.py

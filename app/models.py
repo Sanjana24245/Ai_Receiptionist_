@@ -1,28 +1,3 @@
-# from pydantic import BaseModel, EmailStr
-
-# class UserRegister(BaseModel):
-#     username: str
-#     email: EmailStr
-#     contactnumber:str
-#     role:str
-#     password: str
-#     confirmPassword: str
-
-# class UserLogin(BaseModel):
-#     username: str
-#     password: str
-
-# class UserResponse(BaseModel):
-#     id: str
-#     username: str
-#     email: EmailStr
-
-# class OTPRequest(BaseModel):
-#     email: EmailStr
-
-# class VerifyOTPRequest(BaseModel):
-#     otp: str
-#     otpToken: str
 
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
@@ -59,3 +34,16 @@ class OTPRequest(BaseModel):
 class VerifyOTPRequest(BaseModel):
     otp: str
     otpToken: str
+
+class Doctor(BaseModel):
+    name: str
+    specialty: str
+    timing: str
+    status: str = Field(default="present")
+    phone: Optional[str] = None
+    experience: Optional[str] = None
+
+
+class DoctorUpdateStatus(BaseModel):
+    status: str
+
