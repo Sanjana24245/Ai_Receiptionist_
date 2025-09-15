@@ -33,7 +33,10 @@ class OTPRequest(BaseModel):
 class VerifyOTPRequest(BaseModel):
     otp: str
     otpToken: str
-
+class ResetPasswordRequest(BaseModel):
+    newPassword: str
+    otp: str
+    otpToken: str
 class Doctor(BaseModel):
     name: str
     specialty: str
@@ -55,3 +58,13 @@ class Appointment(BaseModel):
     appointment_time: datetime
     disease: str
     doctor_id: str
+    
+    
+class Patient(BaseModel):
+    id: Optional[str] = None
+    name: str
+    age: int
+    phone: int       # ✅ string ki jagah integer
+    issue: str
+    lastVisit: str   # abhi string hi rakho (date string)
+ 

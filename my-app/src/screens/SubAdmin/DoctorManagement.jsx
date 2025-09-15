@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Sidebar from './Sidebar';
-import Navbar from './Navbar';
+
 import { Stethoscope, Clock } from 'lucide-react';
 
 const DoctorManagement = () => {
@@ -66,11 +65,7 @@ const DoctorManagement = () => {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <Sidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-auto bg-gray-100">
-        <Navbar />
+    
 
         <div className="flex-1 p-6">
           {/* Header */}
@@ -249,7 +244,7 @@ const DoctorManagement = () => {
 
         </div>
       </div>
-    </div>
+    
   );
 };
 
