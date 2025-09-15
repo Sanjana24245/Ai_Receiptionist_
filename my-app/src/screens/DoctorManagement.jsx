@@ -178,16 +178,18 @@ const DoctorManagement = () => {
 
           {/* Doctors List */}
         {/* Doctors List */}
+{/* Doctors List */}
 <div className="bg-white rounded-xl shadow-sm border">
   <div className="p-6 border-b">
     <h3 className="text-xl font-semibold">Doctors List</h3>
   </div>
   <div className="overflow-x-auto">
-    <table className="w-full">
+    <table className="w-full table-auto">
       <thead className="bg-gray-50">
         <tr>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Specialty</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Experience</th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timing</th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
@@ -196,25 +198,28 @@ const DoctorManagement = () => {
       <tbody className="divide-y divide-gray-200">
         {doctors.map((doctor) => (
           <tr key={doctor._id} className="hover:bg-gray-50">
-            <td className="px-6 py-4 flex items-center">
+            {/* Doctor Name */}
+            <td className="px-6 py-4 flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                 <Stethoscope className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="ml-4">
-                <div className="font-medium text-gray-900">{doctor.name}</div>
-                <div className="text-sm text-gray-500">{doctor.experience}</div>
-              </div>
+              <div className="font-medium text-gray-900">{doctor.name}</div>
             </td>
 
+            {/* Specialty */}
             <td className="px-6 py-4 text-sm text-gray-900">{doctor.specialty}</td>
 
+            {/* Experience */}
+            <td className="px-6 py-4 text-sm text-gray-900">{doctor.experience}</td>
+
+            {/* Timing */}
             <td className="px-6 py-4 text-sm text-gray-900 flex items-center">
-              <Clock className="w-4 h-4 mr-2 text-gray-400" />
+              <Clock className="w-4 h-4 mr-1 text-gray-400" />
               {doctor.timing}
             </td>
 
-            {/* Status column with toggle */}
-            <td className="px-6 py-4 flex items-center">
+            {/* Status Toggle with text inside */}
+            <td className="px-6 py-4">
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -222,13 +227,15 @@ const DoctorManagement = () => {
                   checked={doctor.status === 'present'}
                   onChange={() => toggleStatus(doctor)}
                 />
-                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-green-500 transition-all relative">
-                  <span className={`absolute left-1 top-1 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${doctor.status === 'present' ? 'translate-x-0' : 'translate-x-7'}`}></span>
+                <div className="w-20 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer-checked:bg-green-500 transition-all relative flex items-center justify-center">
+                  <span className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${doctor.status === 'present' ? 'translate-x-0' : 'translate-x-12'}`}></span>
+                  <span className={`absolute left-1 w-full text-xs font-medium text-gray-700 text-center transition-opacity ${doctor.status === 'present' ? 'opacity-100' : 'opacity-0'}`}>Present</span>
+                  <span className={`absolute left-1 w-full text-xs font-medium text-gray-700 text-center transition-opacity ${doctor.status !== 'present' ? 'opacity-100' : 'opacity-0'}`}>Leave</span>
                 </div>
-                <span className="ml-3 text-sm font-medium text-gray-700">{doctor.status === 'present' ? 'Present' : 'On Leave'}</span>
               </label>
             </td>
 
+            {/* Contact */}
             <td className="px-6 py-4 text-sm text-gray-900">{doctor.phone}</td>
           </tr>
         ))}
@@ -236,6 +243,8 @@ const DoctorManagement = () => {
     </table>
   </div>
 </div>
+
+
 
 
         </div>
