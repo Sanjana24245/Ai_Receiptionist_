@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from passlib.context import CryptContext
 from bson import ObjectId
 from app.database import users_collection
-from app.models import UserRegister, UserLogin, OTPRequest, VerifyOTPRequest
+from app.models import UserRegister, UserLogin, OTPRequest, VerifyOTPRequest, ResetPasswordRequest
 from app.utils.jwt_handler import create_access_token, verify_token
 from app.utils.email_utils import send_otp
 from app.middleware.auth_middleware import authenticate
@@ -45,8 +45,11 @@ async def login(data: UserLogin):
     # Find user by email only
     user = await users_collection.find_one({"email": data.email})
 
-    if not user or not pwd_context.verify(data.password, user["password"]):
-        raise HTTPException(status_code=400, detail="Invalid email or password")
+    if not user:
+     raise HTTPException(status_code=404, detail="User not found")
+
+    if not pwd_context.verify(data.password, user["password"]):
+     raise HTTPException(status_code=400, detail="Password is wrong")
 
     # Create JWT token
     token = create_access_token({"id": str(user["_id"]), "role": user["role"]})
@@ -137,3 +140,50 @@ async def verify_otp(data: VerifyOTPRequest):
     if decoded.get("otp") != data.otp:
         raise HTTPException(status_code=400, detail="Incorrect OTP")
     return {"msg": "OTP verified successfully"}
+
+# Forgot Password → Send OTP
+@router.post("/forgot-password/send-otp")
+async def forgot_password_send_otp(data: OTPRequest):
+    user = await users_collection.find_one({"email": data.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    otp = str(random.randint(100000, 999999))
+    await send_otp(data.email, otp)
+
+    otp_token = create_access_token({"email": data.email, "otp": otp}, expires_delta=10)
+    return {"msg": "OTP sent to your email", "otpToken": otp_token}
+
+
+# Forgot Password → Verify OTP
+@router.post("/forgot-password/verify-otp")
+async def forgot_password_verify_otp(data: VerifyOTPRequest):
+    decoded = verify_token(data.otpToken)
+    if not decoded:
+        raise HTTPException(status_code=400, detail="OTP expired or invalid")
+
+    if decoded.get("otp") != data.otp:
+        raise HTTPException(status_code=400, detail="Incorrect OTP")
+
+    return {"msg": "OTP verified successfully", "email": decoded["email"]}
+
+
+# Forgot Password → Reset Password
+@router.post("/forgot-password/reset")
+async def forgot_password_reset(data: ResetPasswordRequest):
+    decoded = verify_token(data.otpToken)
+    if not decoded:
+        raise HTTPException(status_code=400, detail="OTP expired or invalid")
+
+    if decoded.get("otp") != data.otp:
+        raise HTTPException(status_code=400, detail="Incorrect OTP")
+
+    hashed_pw = pwd_context.hash(data.newPassword)
+    result = await users_collection.update_one(
+        {"email": decoded["email"]}, {"$set": {"password": hashed_pw}}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Password update failed")
+
+    return {"msg": "Password reset successful"}
