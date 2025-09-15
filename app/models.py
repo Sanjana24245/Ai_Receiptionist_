@@ -1,7 +1,7 @@
 
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
-
+from datetime import datetime
 class UserRegister(BaseModel):
     username: str
     email: EmailStr
@@ -10,12 +10,11 @@ class UserRegister(BaseModel):
     password: str = Field(..., min_length=6)
     confirmPassword: str = Field(..., min_length=6)
 
-# ✅ Login request model
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-# ✅ Response model (for profile, registration response)
+
 class UserResponse(BaseModel):
     id: str
     firstName: str
@@ -27,7 +26,7 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# ✅ OTP related models
+
 class OTPRequest(BaseModel):
     email: Optional[EmailStr] = None
     contactnumber: Optional[str] = None
@@ -47,3 +46,12 @@ class Doctor(BaseModel):
 class DoctorUpdateStatus(BaseModel):
     status: str
 
+class Appointment(BaseModel):
+    id: Optional[str] = None   
+    type: str = Field(..., pattern="^(human|AI)$")  
+    name: str
+    age: int
+    address: str
+    appointment_time: datetime
+    disease: str
+    doctor_id: str
