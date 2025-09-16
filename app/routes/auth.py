@@ -66,6 +66,36 @@ async def login(data: UserLogin):
         },
     }
 
+# @router.post("/login")
+# async def login(data: UserLogin):
+#     # Find user by email only
+#     user = await users_collection.find_one({"email": data.email})
+
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
+
+#     # Verify password
+#     if not pwd_context.verify(data.password, user["password"]):
+#         raise HTTPException(status_code=400, detail="Password is wrong")
+
+#     # BLOCK subadmin if still pending
+#     if user["role"] == "subadmin" and user.get("isPending", True):
+#         raise HTTPException(status_code=403, detail="SubAdmin not approved by Admin yet")
+
+#     # Create JWT token
+#     token = create_access_token({"id": str(user["_id"]), "role": user["role"]})
+
+#     return {
+#         "msg": "Login successful",
+#         "token": token,
+#         "user": {
+#             "id": str(user["_id"]),
+#             "username": user.get("username"),
+#             "email": user["email"],
+#             "role": user["role"],
+#             "contactnumber": user.get("contactnumber")
+#         },
+#     }
 
 # Send OTP
 # app/routes/auth.py

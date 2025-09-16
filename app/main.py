@@ -24,6 +24,7 @@ app.include_router(auth.router)
 app.include_router(doctor.router)
 app.include_router(appointments.router)
 app.include_router(patient.router)
+
 @app.get("/favicon.ico")
 async def favicon():
     return FileResponse("app/static/favicon.ico")
