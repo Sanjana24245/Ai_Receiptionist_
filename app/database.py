@@ -50,3 +50,6 @@ users_collection = db["users"]
 doctors_collection = db["doctors"]
 appointments_collection = db["appointments"]
 patients_collection = db["patients"] 
+chats_collection = db["chats"]            # stores chat sessions
+subadmins_collection = db["subadmins"]    # receptionists / human agents
+messages_collection = db["messages"] 

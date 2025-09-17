@@ -14,57 +14,70 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 otp_store = {}
 
 # Register
+# @router.post("/register")
+# async def register(user: UserRegister):
+#     if user.password != user.confirmPassword:
+#         raise HTTPException(status_code=400, detail="Passwords do not match")
+
+#     existing = await users_collection.find_one(
+#         {"$or": [{"email": user.email}, {"username": user.username}]}
+#     )
+#     if existing:
+#         raise HTTPException(status_code=400, detail="Username or Email already exists")
+
+#     hashed_pw = pwd_context.hash(user.password)
+#     new_user = {
+#         "username": user.username,
+#         "email": user.email,
+#         "role": user.role,
+#         "contactnumber": user.contactnumber,
+#         "password": hashed_pw,
+#     }
+#     await users_collection.insert_one(new_user)
+#     return {"msg": "User registered successfully. You can now login."}
 @router.post("/register")
 async def register(user: UserRegister):
     if user.password != user.confirmPassword:
         raise HTTPException(status_code=400, detail="Passwords do not match")
 
+    # Check for existing username/email
     existing = await users_collection.find_one(
         {"$or": [{"email": user.email}, {"username": user.username}]}
     )
     if existing:
         raise HTTPException(status_code=400, detail="Username or Email already exists")
 
+    # Assign role
+    if user.role not in ["admin", "subadmin"]:
+        user_role = "user"  # default for normal users
+    else:
+        user_role = user.role  # admin/subadmin choice
+
     hashed_pw = pwd_context.hash(user.password)
+    is_pending = False
+    is_active = True
+    if user.role == "subadmin":
+        is_pending = True
+        is_active = False
     new_user = {
         "username": user.username,
         "email": user.email,
-        "role": user.role,
         "contactnumber": user.contactnumber,
+        "role": user_role,
         "password": hashed_pw,
+        "isPending": is_pending,
+        "isActive": is_active,
     }
-    await users_collection.insert_one(new_user)
-    return {"msg": "User registered successfully. You can now login."}
 
+    await users_collection.insert_one(new_user)
+    return {
+        "msg": "Subadmin registered successfully. Awaiting admin approval."
+        if user.role == "subadmin"
+        else "User registered successfully. You can now login."
+    }
 # Login
 # Login Route
 # app/routes/auth.py
-
-@router.post("/login")
-async def login(data: UserLogin):
-    # Find user by email only
-    user = await users_collection.find_one({"email": data.email})
-
-    if not user:
-     raise HTTPException(status_code=404, detail="User not found")
-
-    if not pwd_context.verify(data.password, user["password"]):
-     raise HTTPException(status_code=400, detail="Password is wrong")
-
-    # Create JWT token
-    token = create_access_token({"id": str(user["_id"]), "role": user["role"]})
-
-    return {
-        "msg": "Login successful",
-        "token": token,
-        "user": {
-            "id": str(user["_id"]),
-            "username": user.get("username"),
-            "email": user["email"],
-            "role": user["role"],
-            "contactnumber": user.get("contactnumber")
-        },
-    }
 
 # @router.post("/login")
 # async def login(data: UserLogin):
@@ -72,15 +85,10 @@ async def login(data: UserLogin):
 #     user = await users_collection.find_one({"email": data.email})
 
 #     if not user:
-#         raise HTTPException(status_code=404, detail="User not found")
+#      raise HTTPException(status_code=404, detail="User not found")
 
-#     # Verify password
 #     if not pwd_context.verify(data.password, user["password"]):
-#         raise HTTPException(status_code=400, detail="Password is wrong")
-
-#     # BLOCK subadmin if still pending
-#     if user["role"] == "subadmin" and user.get("isPending", True):
-#         raise HTTPException(status_code=403, detail="SubAdmin not approved by Admin yet")
+#      raise HTTPException(status_code=400, detail="Password is wrong")
 
 #     # Create JWT token
 #     token = create_access_token({"id": str(user["_id"]), "role": user["role"]})
@@ -96,6 +104,42 @@ async def login(data: UserLogin):
 #             "contactnumber": user.get("contactnumber")
 #         },
 #     }
+
+@router.post("/login")
+async def login(data: UserLogin):
+    # Find user by email only
+    user = await users_collection.find_one({"email": data.email})
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Verify password
+    if not pwd_context.verify(data.password, user["password"]):
+        raise HTTPException(status_code=400, detail="Password is wrong")
+
+    # BLOCK subadmin if still pending
+    if user.get("role") == "subadmin":
+        if user.get("isPending", True):
+            raise HTTPException(status_code=403, detail="SubAdmin not approved by Admin yet")
+        if not user.get("isActive", False):
+            raise HTTPException(status_code=403, detail="SubAdmin account is not active")
+
+    # Create JWT token
+    token = create_access_token({"id": str(user["_id"]), "role": user["role"]})
+
+    return {
+        "msg": "Login successful",
+        "token": token,
+        "user": {
+            "id": str(user["_id"]),
+            "username": user.get("username"),
+            "email": user["email"],
+            "role": user["role"],
+            "contactnumber": user.get("contactnumber"),
+            "isPending": user.get("isPending", False),
+            "isActive": user.get("isActive", False),
+        },
+    }
 
 # Send OTP
 # app/routes/auth.py
