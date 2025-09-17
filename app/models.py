@@ -1,12 +1,12 @@
 
-from typing import Optional
+from typing import Optional,List
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 class UserRegister(BaseModel):
     username: str
     email: EmailStr
     contactnumber: str
-    role: str = Field(..., pattern="^(admin|subadmin)$")
+    role: Optional[str] = None
     password: str = Field(..., min_length=6)
     confirmPassword: str = Field(..., min_length=6)
 
@@ -58,6 +58,9 @@ class Appointment(BaseModel):
     appointment_time: datetime
     disease: str
     doctor_id: str
+    user_id: str
+    receptionist_id: Optional[str] = None
+    status: str = Field(default="booked")
     
     
 class Patient(BaseModel):
@@ -83,6 +86,9 @@ class SubAdminResponse(BaseModel):
     contactnumber: str
     isActive: bool
     shift: Optional[str] = None
+    is_online: bool = False      # ✅ receptionist availability
+    active_chats: Optional[int] = 0
+    max_chats: int = 5  
 
     class Config:
         from_attributes = True
@@ -93,115 +99,19 @@ class ShiftUpdate(BaseModel):
 
 class ToggleActive(BaseModel):
     isActive: bool
-
-# from typing import Optional, Literal
-# from pydantic import BaseModel, EmailStr, Field
-# from datetime import datetime
-
-
-# # ----------------- USERS -----------------
-# class UserRegister(BaseModel):
-#     firstName: str
-#     lastName: str
-#     email: EmailStr
-#     contactNumber: str
-#     role: Literal["admin", "subadmin"]
-#     password: str = Field(..., min_length=6)
-#     confirmPassword: str = Field(..., min_length=6)
+class Message(BaseModel):
+    sender_id: str
+    sender_role: str   # "user" ya "subadmin"
+    text: Optional[str] = None
+    file_url: Optional[str] = None     # ✅ agar file bhejna hai
+    type: str = Field(default="text", pattern="^(text|file|system)$")
+    timestamp: datetime = datetime.utcnow()
 
 
-# class SubAdminRegister(UserRegister):
-#     role: Literal["subadmin"] = "subadmin"
-
-
-# class UserLogin(BaseModel):
-#     email: EmailStr
-#     password: str
-
-
-# class UserResponse(BaseModel):
-#     id: str
-#     firstName: str
-#     lastName: str
-#     email: EmailStr
-#     contactNumber: str
-#     role: str
-
-#     class Config:
-#         from_attributes = True
-
-
-# class SubAdminResponse(BaseModel):
-#     id: str
-#     firstName: str
-#     lastName: str
-#     email: EmailStr
-#     contactNumber: str
-#     isActive: bool
-#     shift: Optional[str] = None
-
-#     class Config:
-#         from_attributes = True
-
-
-# # ----------------- OTP -----------------
-# class OTPRequest(BaseModel):
-#     email: Optional[EmailStr] = None
-#     contactNumber: Optional[str] = None
-
-
-# class VerifyOTPRequest(BaseModel):
-#     otp: str
-#     otpToken: str
-
-
-# class ResetPasswordRequest(BaseModel):
-#     newPassword: str = Field(..., min_length=6)
-#     otp: str
-#     otpToken: str
-
-
-# # ----------------- DOCTORS -----------------
-# class Doctor(BaseModel):
-#     name: str
-#     specialty: str
-#     timing: str
-#     status: Literal["present", "absent"] = "present"
-#     phone: Optional[str] = None
-#     experience: Optional[str] = None
-
-
-# class DoctorUpdateStatus(BaseModel):
-#     status: Literal["present", "absent"]
-
-
-# # ----------------- APPOINTMENTS -----------------
-# class Appointment(BaseModel):
-#     id: Optional[str] = None
-#     type: Literal["human", "AI"]
-#     name: str
-#     age: int
-#     address: str
-#     appointment_time: datetime
-#     disease: str
-#     doctor_id: str
-
-
-# # ----------------- PATIENTS -----------------
-# class Patient(BaseModel):
-#     id: Optional[str] = None
-#     name: str
-#     age: int
-#     phone: str  # Using string for phone numbers
-#     issue: str
-#     lastVisit: Optional[datetime] = None  # Can store datetime
-
-
-# # ----------------- SHIFT -----------------
-# class ShiftUpdate(BaseModel):
-#     start: datetime
-#     end: datetime
-
-
-# class ToggleActive(BaseModel):
-#     isActive: bool
+class Chat(BaseModel):
+    id: Optional[str] = None
+    user_id: str
+    subadmin_id: Optional[str] = None 
+    mode: str = Field(default="AI", pattern="^(AI|human)$")# ✅ user kis receptionist ke sath baat kar raha hai
+    messages: List[Message] = []
+    created_at: datetime = datetime.utcnow()
