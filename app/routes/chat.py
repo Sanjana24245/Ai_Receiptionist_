@@ -4,7 +4,7 @@ from bson import ObjectId
 from datetime import datetime
 from typing import Optional
 from app.database import chats_collection, subadmins_collection
-from app.manager import manager
+
 from app.middleware.auth_middleware import authenticate
 from app.models import Message, Chat   # ✅ import models
 from fastapi import WebSocket, Query
@@ -95,15 +95,15 @@ async def send_chat_message(chat_id: str, message: Message, current_user=Depends
 # ---------------- WebSocket ----------------
 
 
-@router.websocket("/ws/{chat_id}")
-async def websocket_endpoint(websocket: WebSocket, chat_id: str, token: str = Query(...)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
-        await websocket.close(code=1008)
-        return
+# @router.websocket("/ws/{chat_id}")
+# async def websocket_endpoint(websocket: WebSocket, chat_id: str, token: str = Query(...)):
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#     except JWTError:
+#         await websocket.close(code=1008)
+#         return
 
-    user_id = str(payload["id"])
-    role = payload["role"]
+#     user_id = str(payload["id"])
+#     role = payload["role"]
 
-    await manager.connect(websocket, chat_id, role, user_id)
+#     await manager.connect(websocket, chat_id, role, user_id)

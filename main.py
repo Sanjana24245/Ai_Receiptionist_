@@ -1,4 +1,5 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
+
 from app.routes import auth
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,9 +7,11 @@ from fastapi.responses import FileResponse
 from app.routes import doctor
 from app.routes import appointments,patient, subadmin,chat 
 from typing import Dict, List
-from app.manager import ConnectionManager
+import json
+from datetime import datetime
+from manager import ConnectionManager
 app = FastAPI()
-
+manager = ConnectionManager()
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,40 +37,89 @@ async def root():
 
 
 # Manager for active connections
+# @app.websocket("/ws")
+# async def websocket_endpoint(websocket: WebSocket, role: str = Query(...), client_id: str = Query(None)):
+#     try:
+#         if role == "user":
+#             if not client_id:
+#                 await websocket.close(code=4001)
+#                 return
+#             await manager.connect_user(client_id, websocket)
+
+       
+#         elif role == "subadmin":   # ✅ add this
+#             if not client_id:
+#                 await websocket.close(code=4003)
+#                 return
+#             await manager.connect_subadmin(client_id, websocket)  # <-- implement in manager.py
+
+#         else:
+#             await websocket.close(code=4000)
+#             return
+
+#         # receive loop
+#         while True:
+#             data = await websocket.receive_text()
+#             message = json.loads(data)
+#             if "timestamp" not in message:
+#                 message["timestamp"] = datetime.utcnow().isoformat()
+#             await manager.route_message(message)
+
+#     except WebSocketDisconnect:
+#         await manager.disconnect(websocket)
+#     except Exception as e:
+#         await manager.disconnect(websocket)
+# @app.websocket("/ws")
+# async def websocket_endpoint(websocket: WebSocket, role: str = Query(...), client_id: str = Query(None)):
+#     try:
+#         if role == "user":
+#             if not client_id:
+#                 await websocket.close(code=4001)
+#                 return
+#             await manager.connect_user(client_id, websocket)
+
+#         elif role == "subadmin":   # ✅ keep only "subadmin"
+#             if not client_id:
+#                 await websocket.close(code=4003)
+#                 return
+#             await manager.connect_subadmin(client_id, websocket)
+
+#         else:
+#             await websocket.close(code=4000)
+#             return
+
+#         while True:
+#             data = await websocket.receive_text()
+#             message = json.loads(data)
+#             if "timestamp" not in message:
+#                 message["timestamp"] = datetime.utcnow().isoformat()
+#             await manager.route_message(message)
+
+#     except WebSocketDisconnect:
+#         await manager.disconnect(websocket)
+#     except Exception as e:
+#         print("WebSocket error:", e)
+#         await manager.disconnect(websocket)
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, role: str = Query(...), client_id: str = Query(None)):
-    """
-    Connect as:
-    - user: role=user&client_id=<userId>
-    - receptionist: role=receptionist&client_id=<receptionistId(optional)>
-    """
     try:
         if role == "user":
-            if not client_id:
-                await websocket.close(code=4001)
-                return
             await manager.connect_user(client_id, websocket)
-        elif role == "receptionist":
-            await manager.connect_receptionist(websocket)
+        elif role == "subadmin":
+            await manager.connect_subadmin(client_id, websocket)
         else:
-            # unknown role
             await websocket.close(code=4000)
             return
 
         while True:
             data = await websocket.receive_text()
-            try:
-                message = json.loads(data)
-            except:
-                continue
-            # attach timestamp if missing
+            message = json.loads(data)
             if "timestamp" not in message:
                 message["timestamp"] = datetime.utcnow().isoformat()
-            # Basic routing
             await manager.route_message(message)
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
     except Exception as e:
-        # On any other exception, ensure cleanup
+        print("WebSocket error:", e)
         await manager.disconnect(websocket)
