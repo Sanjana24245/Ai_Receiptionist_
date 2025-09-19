@@ -1,48 +1,24 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import Navbar from '../screens/Navbar'; // ✅ import your Navbar
+import { AuthContext } from '../contexts/AuthContext';
 
 export default function HomeScreen({ navigation }) {
-  
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout', 
-          onPress: async () => {
-            await AsyncStorage.removeItem('userToken');
-            await AsyncStorage.removeItem('userEmail');
-            navigation.replace('Login');
-          }
-        }
-      ]
-    );
-  };
+  const { user, logout } = useContext(AuthContext);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>Welcome to AI Receptionist</Text>
-        <Text style={styles.subText}>How would you like to get assistance?</Text>
-        
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={{  backgroundColor: '#f5f5f5' }}>
       
+      {/* Navbar */}
+      <Navbar />
+
+      {/* Main Content */}
       <View style={styles.optionsContainer}>
         <TouchableOpacity 
           style={[styles.optionButton, styles.callButton]}
@@ -69,45 +45,11 @@ export default function HomeScreen({ navigation }) {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-   header: {
-    backgroundColor: '#6200EE',
-    padding: 30,
-    paddingTop: 50,
-  },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-  },
-  subText: {
-    fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
-    marginTop: 10,
-    opacity: 0.9,
-  },
-  logoutButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: 10,
-    borderRadius: 5,
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 14,
-  },
   optionsContainer: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
+    padding: 20,         // ❌ removed flex:1
+     marginTop:100,      // ✅ optional: small space below Navbar
   },
   optionButton: {
     padding: 30,
@@ -139,5 +81,4 @@ const styles = StyleSheet.create({
     marginTop: 5,
     opacity: 0.9,
   },
- 
-  })
+});
