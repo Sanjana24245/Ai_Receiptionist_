@@ -137,3 +137,19 @@ async def register_subadmin(data: SubAdminRegister):
         "message": "SubAdmin registered successfully. Awaiting approval.",
         "subadmin": new_subadmin
     }
+# Get all chats assigned to a subadmin
+@router.get("/{subadmin_id}/chats")
+async def get_subadmin_chats(subadmin_id: str, payload: dict = Depends(authenticate)):
+    # Ensure only admin or the same subadmin can fetch
+    if payload["role"] not in ["admin", "subadmin"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    if payload["role"] == "subadmin" and payload["id"] != subadmin_id:
+        raise HTTPException(status_code=403, detail="Cannot access other subadmin's chats")
+
+    chats_cursor = chats_collection.find({"subadmin_id": subadmin_id})
+    result = []
+    async for chat in chats_cursor:
+        chat["id"] = str(chat["_id"])
+        result.append(chat)
+    return {"chats": result}
