@@ -109,7 +109,7 @@ class Message(BaseModel):
 
 
 class Chat(BaseModel):
-    id: Optional[str] = None
+    
     user_id: str
     subadmin_id: Optional[str] = None 
     mode: str = Field(default="AI", pattern="^(AI|human)$")# ✅ user kis receptionist ke sath baat kar raha hai

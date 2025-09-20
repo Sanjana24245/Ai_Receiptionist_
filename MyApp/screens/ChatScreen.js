@@ -51,9 +51,20 @@ const USER_ID = user?.id;
       setConnected(false);
       console.log("Socket closed");
     };
-
+    
     return () => socket.close();
   }, [USER_ID]);
+useEffect(() => {
+  if (!USER_ID) return;
+
+  fetch(`http://192.168.1.49:8000/chat/${USER_ID}`)
+    .then(res => res.json())
+    .then(data => {
+      setMessages(data.messages || []);
+    })
+    .catch(err => console.error("Failed to load history", err));
+}, [USER_ID]);
+
 
   function sendMessage() {
     if (!outText.trim() || !ws) return;
@@ -97,7 +108,7 @@ ws.send(JSON.stringify(payload));
             ]}
           >
             <View style={styles.messageBubble}>
-              <Text style={styles.messageText}>{m.content}</Text>
+<Text style={styles.messageText}>{m.text || m.content}</Text>
               <Text style={styles.timestamp}>
                 {new Date(m.timestamp).toLocaleString()}
               </Text>
