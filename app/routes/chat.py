@@ -1,109 +1,80 @@
-
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Depends, Query
-from bson import ObjectId
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
 from datetime import datetime
-from typing import Optional
-from app.database import chats_collection, subadmins_collection
+import json
 
-from app.middleware.auth_middleware import authenticate
-from app.models import Message, Chat   # ✅ import models
-from fastapi import WebSocket, Query
-from jose import jwt, JWTError
+from app.database import chats_collection, messages_collection
+
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
-# Helper to serialize MongoDB docs
-def serialize_doc(doc):
-    if doc:
-        doc["_id"] = str(doc["_id"])
-    return doc
-
-
-# ---------------- Find Available Receptionist ----------------
-async def find_available_receptionist():
-    return await subadmins_collection.find_one(
-        {"is_online": True, "active_chats": {"$lt": 5}}
-    )
-
-
-# ---------------- Start Chat ----------------
-@router.post("/start")
-async def start_chat(current_user=Depends(authenticate), mode: str = "human"):
-    user_id = str(current_user["id"])
-    subadmin_id: Optional[str] = None
-
-    if mode == "human":
-        receptionist = await find_available_receptionist()
-        if receptionist:
-            subadmin_id = str(receptionist["_id"])
-            await subadmins_collection.update_one(
-                {"_id": receptionist["_id"]},
-                {"$inc": {"active_chats": 1}}
-            )
-        else:
-            mode = "AI"
-
-    # ✅ Use Chat model instead of dict
-    chat = Chat(
-        user_id=user_id,
-        subadmin_id=subadmin_id,
-        mode=mode,
-        messages=[],
-    )
-
-    result = await chats_collection.insert_one(chat.dict())
-    chat.id = str(result.inserted_id)
-
-    return {"msg": "Chat started", "chat": chat.dict()}
-
-
-# ---------------- Get Messages ----------------
-@router.get("/{chat_id}/messages")
-async def get_chat_messages(chat_id: str, current_user=Depends(authenticate)):
-    chat = await chats_collection.find_one({"_id": ObjectId(chat_id)})
+# ✅ Get chat history for a user
+@router.get("/{user_id}")
+async def get_chat(user_id: str):
+    chat = await chats_collection.find_one({"user_id": user_id})
     if not chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
-    return {"messages": chat.get("messages", [])}
+        return {"messages": []}
+
+    messages_cursor = messages_collection.find({"chat_id": str(chat["_id"])}).sort("timestamp", 1)
+    messages = []
+    async for msg in messages_cursor:
+        messages.append({
+            "id": str(msg["_id"]),
+            "from": msg["sender_role"],   # 👈 fix
+            "sender_id": msg["sender_id"],
+            "to": msg["receiver_id"],
+            "content": msg.get("content"),
+            "type": msg.get("type", "text"),
+            "timestamp": msg["timestamp"].isoformat()
+        })
+
+    return {"messages": messages}
 
 
-# ---------------- Send Message ----------------
-@router.post("/{chat_id}/message")
-async def send_chat_message(chat_id: str, message: Message, current_user=Depends(authenticate)):
-    chat = await chats_collection.find_one({"_id": ObjectId(chat_id)})
-    if not chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
+# ✅ Create or get existing chat session
+async def get_or_create_chat(user_id: str, subadmin_id: str):
+    chat = await chats_collection.find_one({"user_id": user_id, "subadmin_id": subadmin_id})
+    if chat:
+        return chat
 
-    # ✅ Populate sender details
-    message.sender_id = str(current_user["id"])
-    message.sender_role = current_user["role"]
-    message.timestamp = datetime.utcnow()
-
-    message_data = message.dict()
-    message_data["_id"] = str(ObjectId())
-
-    await chats_collection.update_one(
-        {"_id": ObjectId(chat_id)},
-        {"$push": {"messages": message_data}}
-    )
-
-    # Broadcast via WebSocket
-    await manager.broadcast_to_chat(chat_id, {"event": "new_message", "message": message_data})
-
-    return {"msg": "Message sent", "message": message_data}
+    new_chat = {
+        "user_id": user_id,
+        "subadmin_id": subadmin_id,
+        "created_at": datetime.utcnow()
+    }
+    result = await chats_collection.insert_one(new_chat)
+    new_chat["_id"] = result.inserted_id
+    return new_chat
 
 
-# ---------------- WebSocket ----------------
+# ✅ Save a new message
 
+    # Ensure chat exists
+ # app/routes/chat.py
 
-# @router.websocket("/ws/{chat_id}")
-# async def websocket_endpoint(websocket: WebSocket, chat_id: str, token: str = Query(...)):
-#     try:
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#     except JWTError:
-#         await websocket.close(code=1008)
-#         return
+async def save_message(user_id, subadmin_id, sender, content):
+    chat = await get_or_create_chat(user_id, subadmin_id)
 
-#     user_id = str(payload["id"])
-#     role = payload["role"]
+    msg_doc = {
+        "chat_id": str(chat["_id"]),
+        "sender_id": user_id if sender == "user" else subadmin_id,
+        "sender_role": sender,   # 👈 important: "user" or "subadmin"
+        "receiver_id": subadmin_id if sender == "user" else user_id,
+        "content": content,
+        "type": "text",
+        "timestamp": datetime.utcnow(),
+    }
+    result = await messages_collection.insert_one(msg_doc)
+    msg_doc["_id"] = result.inserted_id
 
-#     await manager.connect(websocket, chat_id, role, user_id)
+    # Normalize for return
+    return {
+        "id": str(result.inserted_id),
+        "chat_id": msg_doc["chat_id"],
+        "from": sender,
+        "sender_id": msg_doc["sender_id"],
+        "to": msg_doc["receiver_id"],
+        "content": content,
+        "type": "text",
+        "timestamp": msg_doc["timestamp"].isoformat(),
+    }

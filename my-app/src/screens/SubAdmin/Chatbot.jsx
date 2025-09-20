@@ -48,10 +48,17 @@ socket.onmessage = (ev) => {
   }, [messagesByUser, selectedUser]);
 
   function selectUser(u) {
-    setSelectedUser(u);
-    // ensure key exists
-    setMessagesByUser(prev => ({ ...prev, [u]: prev[u] ?? [] }));
-  }
+  setSelectedUser(u);
+  setMessagesByUser(prev => ({ ...prev, [u]: prev[u] ?? [] }));
+
+  fetch(`http://localhost:8000/chat/${u}`)
+    .then(res => res.json())
+    .then(data => {
+      setMessagesByUser(prev => ({ ...prev, [u]: data.messages || [] }));
+    })
+    .catch(err => console.error("Failed to load chat history", err));
+}
+
 
   function sendMessage() {
     if (!selectedUser || !outText.trim()) return;
@@ -121,7 +128,10 @@ ws.send(JSON.stringify(payload));
                   background: m.from === "subadmin" ? "#d0f0ff" : "#f1f1f1",
                   fontSize: 14
                 }}>
-                  <div style={{fontSize:12, color:"#333"}}>{m.content}</div>
+                  <div style={{fontSize:12, color:"#333"}}>
+  {m.text || m.content}
+</div>
+
                   <div style={{fontSize:10, color:"#666", marginTop:6}}>{new Date(m.timestamp).toLocaleString()}</div>
                 </div>
               </div>

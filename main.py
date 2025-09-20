@@ -9,9 +9,10 @@ from app.routes import appointments,patient, subadmin,chat
 from typing import Dict, List
 import json
 from datetime import datetime
+from app.database import db
 from manager import ConnectionManager
 app = FastAPI()
-manager = ConnectionManager()
+manager = ConnectionManager(db)
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,73 +36,67 @@ async def root():
     return {"msg": "FastAPI Auth System Running"}
 
 
-
-# Manager for active connections
-# @app.websocket("/ws")
-# async def websocket_endpoint(websocket: WebSocket, role: str = Query(...), client_id: str = Query(None)):
-#     try:
-#         if role == "user":
-#             if not client_id:
-#                 await websocket.close(code=4001)
-#                 return
-#             await manager.connect_user(client_id, websocket)
-
-       
-#         elif role == "subadmin":   # ✅ add this
-#             if not client_id:
-#                 await websocket.close(code=4003)
-#                 return
-#             await manager.connect_subadmin(client_id, websocket)  # <-- implement in manager.py
-
-#         else:
-#             await websocket.close(code=4000)
-#             return
-
-#         # receive loop
-#         while True:
-#             data = await websocket.receive_text()
-#             message = json.loads(data)
-#             if "timestamp" not in message:
-#                 message["timestamp"] = datetime.utcnow().isoformat()
-#             await manager.route_message(message)
-
-#     except WebSocketDisconnect:
-#         await manager.disconnect(websocket)
-#     except Exception as e:
-#         await manager.disconnect(websocket)
-# @app.websocket("/ws")
-# async def websocket_endpoint(websocket: WebSocket, role: str = Query(...), client_id: str = Query(None)):
-#     try:
-#         if role == "user":
-#             if not client_id:
-#                 await websocket.close(code=4001)
-#                 return
-#             await manager.connect_user(client_id, websocket)
-
-#         elif role == "subadmin":   # ✅ keep only "subadmin"
-#             if not client_id:
-#                 await websocket.close(code=4003)
-#                 return
-#             await manager.connect_subadmin(client_id, websocket)
-
-#         else:
-#             await websocket.close(code=4000)
-#             return
-
-#         while True:
-#             data = await websocket.receive_text()
-#             message = json.loads(data)
-#             if "timestamp" not in message:
-#                 message["timestamp"] = datetime.utcnow().isoformat()
-#             await manager.route_message(message)
-
-#     except WebSocketDisconnect:
-#         await manager.disconnect(websocket)
-#     except Exception as e:
-#         print("WebSocket error:", e)
-#         await manager.disconnect(websocket)
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, role: str = Query(...), client_id: str = Query(None)):
+    try:
+        if not client_id:
+            await websocket.close(code=4001)
+            return
+
+        if role == "user":
+            await manager.connect_user(client_id, websocket)  # already accepts
+        elif role == "subadmin":
+            await manager.connect_subadmin(client_id, websocket)  # already accepts
+        else:
+            await websocket.close(code=4000)
+            return
+
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            if "timestamp" not in message:
+                message["timestamp"] = datetime.utcnow().isoformat()
+            await manager.route_message(message)
+
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket)
+    except Exception as e:
+        print("WebSocket error:", e)
+        await manager.disconnect(websocket)
+
+# @app.websocket("/ws")
+# async def websocket_endpoint(websocket: WebSocket, role: str = Query(...), client_id: str = Query(None)):
+    try:
+        if not client_id:
+            await websocket.close(code=4001)
+            return
+
+        if role == "user":
+            await manager.connect_user(client_id, websocket)
+        elif role == "subadmin":
+            await manager.connect_subadmin(client_id, websocket)
+        else:
+            await websocket.close(code=4000)
+            return
+
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+
+            if "timestamp" not in message:
+                message["timestamp"] = datetime.utcnow().isoformat()
+
+            await manager.route_message(message)
+
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket)
+    except Exception as e:
+        print("WebSocket error:", e)
+        await manager.disconnect(websocket)
+
+
+# @app.websocket("/ws")
+# async def websocket_endpoint(websocket: WebSocket, role: str = Query(...), client_id: str = Query(None)):
     try:
         if role == "user":
             await manager.connect_user(client_id, websocket)
