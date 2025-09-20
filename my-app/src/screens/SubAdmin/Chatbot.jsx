@@ -47,14 +47,25 @@ socket.onmessage = (ev) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesByUser, selectedUser]);
 
-  function selectUser(u) {
-  setSelectedUser(u);
-  setMessagesByUser(prev => ({ ...prev, [u]: prev[u] ?? [] }));
+//   function selectUser(u) {
+//   setSelectedUser(u);
+//   setMessagesByUser(prev => ({ ...prev, [u]: prev[u] ?? [] }));
 
-  fetch(`http://localhost:8000/chat/${u}`)
+//   fetch(`http://localhost:8000/chat/${u}`)
+//     .then(res => res.json())
+//     .then(data => {
+//       setMessagesByUser(prev => ({ ...prev, [u]: data.messages || [] }));
+//     })
+//     .catch(err => console.error("Failed to load chat history", err));
+// }
+function selectUser(userId) {
+  setSelectedUser(userId);
+  setMessagesByUser(prev => ({ ...prev, [userId]: prev[userId] ?? [] }));
+
+  fetch(`http://localhost:8000/chat/${userId}`)
     .then(res => res.json())
     .then(data => {
-      setMessagesByUser(prev => ({ ...prev, [u]: data.messages || [] }));
+      setMessagesByUser(prev => ({ ...prev, [userId]: data.messages || [] }));
     })
     .catch(err => console.error("Failed to load chat history", err));
 }
@@ -87,7 +98,7 @@ ws.send(JSON.stringify(payload));
         <h3>Connected Users</h3>
         <div style={{ maxHeight: "80vh", overflowY: "auto" }}>
           {users.length === 0 && <div>No users connected</div>}
-          {users.map(u => (
+          {/* {users.map(u => (
             <div key={u}
               onClick={() => selectUser(u)}
               style={{
@@ -101,7 +112,25 @@ ws.send(JSON.stringify(payload));
               <strong>{u}</strong>
               <div style={{ fontSize: 12, color: "#666" }}>{(messagesByUser[u] || []).length} msgs</div>
             </div>
-          ))}
+          ))} */}
+          {users.map(u => (
+  <div key={u.id}
+       onClick={() => selectUser(u.id)}
+       style={{
+         padding: 8,
+         marginBottom: 6,
+         borderRadius: 6,
+         background: u.id === selectedUser ? "#eef" : "#fff",
+         cursor: "pointer",
+         boxShadow: "0 0 1px rgba(0,0,0,0.1)"
+       }}>
+    <strong>{u.username}</strong>  {/* show username */}
+    <div style={{ fontSize: 12, color: "#666" }}>
+      {(messagesByUser[u.id] || []).length} msgs
+    </div>
+  </div>
+))}
+
         </div>
       </div>
 

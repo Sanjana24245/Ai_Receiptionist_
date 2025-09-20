@@ -15,14 +15,17 @@ async def get_chat(user_id: str):
     if not chat:
         return {"messages": []}
 
-    messages_cursor = messages_collection.find({"chat_id": str(chat["_id"])}).sort("timestamp", 1)
+    messages_cursor = messages_collection.find(
+        {"chat_id": str(chat["_id"])}
+    ).sort("timestamp", 1)
+
     messages = []
     async for msg in messages_cursor:
         messages.append({
             "id": str(msg["_id"]),
-            "from": msg["sender_role"],   # 👈 fix
+            "from": msg["sender_role"],
             "sender_id": msg["sender_id"],
-            "to": msg["receiver_id"],
+            "to": msg.get("receiver_id"),
             "content": msg.get("content"),
             "type": msg.get("type", "text"),
             "timestamp": msg["timestamp"].isoformat()
