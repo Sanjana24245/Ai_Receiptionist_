@@ -1,6 +1,7 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from fastapi.responses import JSONResponse
 from datetime import datetime
+from motor.motor_asyncio import AsyncIOMotorClient
 import json
 
 from app.database import chats_collection, messages_collection
@@ -81,3 +82,10 @@ async def save_message(user_id, subadmin_id, sender, content):
         "type": "text",
         "timestamp": msg_doc["timestamp"].isoformat(),
     }
+@router.get("/notifications/unread/{user_id}")
+async def get_unread_count(user_id: str, db: AsyncIOMotorClient = Depends()):
+    count = await db["messages"].count_documents({
+        "receiver_id": user_id,
+        "read": False
+    })
+    return {"unread": count}
