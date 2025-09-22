@@ -1,32 +1,54 @@
-import { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { AuthContext } from "./AuthContext";
 
 export const NotificationContext = createContext();
 
-export const NotificationProvider = ({ user, ws, children }) => {
+export const NotificationProvider = ({ children }) => {
+  const { user } = useContext(AuthContext);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [socket, setSocket] = useState(null);
 
-  // ✅ API se fetch initial count
   useEffect(() => {
-    if (!user?.id) return;
-    fetch(`http://localhost:8000/notifications/unread/${user.id}`)
-      .then((res) => res.json())
-      .then((data) => setUnreadCount(data.unread || 0))
-      .catch((err) => console.error("Error fetching unread count", err));
-  }, [user]);
+    if (!user) return;
 
-  // ✅ WebSocket se real-time update
-  useEffect(() => {
-    if (!ws) return;
-    ws.onmessage = (ev) => {
-      const msg = JSON.parse(ev.data);
-      if (msg.type === "chat" && msg.receiver_id === user.id) {
-        setUnreadCount((prev) => prev + 1);
-      }
-      if (msg.type === "mark_read" && msg.receiver_id === user.id) {
-        setUnreadCount(0); // reset jab read ho jaye
+    // 🟢 Connect WebSocket (replace with your server URL)
+    const ws = new WebSocket(`ws://localhost:8000/ws?role=subadmin&client_id=${user.id}`);
+    setSocket(ws);
+
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+
+        if (msg.type === "chat") {
+          console.log("💬 New chat message:", msg);
+          // optionally update chat state here
+        }
+
+        if (msg.type === "unread_counts") {
+          console.log("🔔 Unread counts:", msg.counts);
+          // sum all counts
+          const total = Object.values(msg.counts).reduce((a, b) => a + b, 0);
+          setUnreadCount(total);
+        }
+
+        if (msg.type === "users_list") {
+          console.log("👥 Active users list:", msg.users);
+        }
+      } catch (err) {
+        console.error("WS parse error", err);
       }
     };
-  }, [ws, user]);
+
+    ws.onclose = () => {
+      console.log("❌ WebSocket disconnected");
+    };
+
+    return () => ws.close();
+  }, [user]);
 
   return (
     <NotificationContext.Provider value={{ unreadCount, setUnreadCount }}>
