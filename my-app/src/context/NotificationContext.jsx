@@ -1,57 +1,24 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
-import { AuthContext } from "./AuthContext";
+// src/context/NotificationContext.jsx
+import React, { createContext, useState, useEffect } from "react";
 
 export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
-  const { user } = useContext(AuthContext);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [socket, setSocket] = useState(null);
+  const [unreadCounts, setUnreadCounts] = useState(() => {
+    const saved = localStorage.getItem("subadmin_unread_counts");
+    return saved ? JSON.parse(saved) : {};
+  });
 
+  // Total unread
+  const unreadCount = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+
+  // Sync with localStorage
   useEffect(() => {
-    if (!user) return;
-
-    // 🟢 Connect WebSocket (replace with your server URL)
-    const ws = new WebSocket(`ws://localhost:8000/ws?role=subadmin&client_id=${user.id}`);
-    setSocket(ws);
-
-    ws.onopen = () => {
-      console.log("✅ WebSocket connected");
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === "chat") {
-          console.log("💬 New chat message:", msg);
-          // optionally update chat state here
-        }
-
-        if (msg.type === "unread_counts") {
-          console.log("🔔 Unread counts:", msg.counts);
-          // sum all counts
-          const total = Object.values(msg.counts).reduce((a, b) => a + b, 0);
-          setUnreadCount(total);
-        }
-
-        if (msg.type === "users_list") {
-          console.log("👥 Active users list:", msg.users);
-        }
-      } catch (err) {
-        console.error("WS parse error", err);
-      }
-    };
-
-    ws.onclose = () => {
-      console.log("❌ WebSocket disconnected");
-    };
-
-    return () => ws.close();
-  }, [user]);
+    localStorage.setItem("subadmin_unread_counts", JSON.stringify(unreadCounts));
+  }, [unreadCounts]);
 
   return (
-    <NotificationContext.Provider value={{ unreadCount, setUnreadCount }}>
+    <NotificationContext.Provider value={{ unreadCounts, setUnreadCounts, unreadCount }}>
       {children}
     </NotificationContext.Provider>
   );
