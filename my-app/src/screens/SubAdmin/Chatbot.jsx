@@ -188,7 +188,7 @@ function SubadminChat() {
     return sortedUsers.map((u) => {
       const lastMsg = u.lastMessage || lastMessages[u.id] || null;
       const isFromMe = lastMsg?.from === "subadmin";
-      const preview = lastMsg?.content && isFromMe ? `You: ${lastMsg.content}` : lastMsg?.content ;
+      const preview = lastMsg?.content && isFromMe ? `You: ${lastMsg.content}` : lastMsg?.content || "No messages yet";
 
       return (
         <div
