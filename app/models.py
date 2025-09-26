@@ -2,6 +2,7 @@
 from typing import Optional,List
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
+from bson import ObjectId
 class UserRegister(BaseModel):
     username: str
     email: EmailStr
@@ -115,3 +116,49 @@ class Chat(BaseModel):
     mode: str = Field(default="AI", pattern="^(AI|human)$")# ✅ user kis receptionist ke sath baat kar raha hai
     messages: List[Message] = []
     created_at: datetime = datetime.utcnow()
+
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid objectid")
+        return ObjectId(v)
+
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
+
+class CallBase(BaseModel):
+    user_id: str
+    type: str = Field(..., pattern="^(ai|manual)$")
+    status: str = Field(default="initiated")  # initiated, ongoing, completed, missed
+    duration: Optional[int] = None  # in seconds
+    subadmin_id: Optional[str] = None  # for manual calls
+
+class CallCreate(CallBase):
+    pass
+
+class CallResponse(CallBase):
+    id: str = Field(alias="_id")
+    created_at: datetime
+    ai_transcript: Optional[str] = None
+    manual_notes: Optional[str] = None
+    
+    class Config:
+        allow_population_by_field_name = True
+        json_encoders = {ObjectId: str}
+
+class AICallMessage(BaseModel):
+    role: str  # user or assistant
+    content: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class AICallSession(BaseModel):
+    call_id: str
+    messages: List[AICallMessage] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)

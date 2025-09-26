@@ -90,8 +90,13 @@ function SubadminChat() {
       [from]: msg,
     }));
 
-    setUsers((prev) => prev.map((u) => (u.id === from ? { ...u, lastMessage: msg } : u)));
-
+    setUsers((prev) =>
+    prev.map((u) =>
+      u.id === from
+        ? { ...u, lastMessage: msg, username: msg.sender_name || u.username }
+        : u
+    )
+  );
     if (from !== selectedUser) {
       setUnreadCounts((prev) => ({
         ...prev,
@@ -145,6 +150,7 @@ function SubadminChat() {
       type: "chat",
       from: "subadmin",
       sender_id: SUBADMIN_ID,
+      sender_name: user?.username || user?.name || "Subadmin",
       to: selectedUser,
       content: outText,
       timestamp: new Date().toISOString(),
@@ -277,9 +283,9 @@ function SubadminChat() {
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
       {/* Navbar with notifications */}
-      <div style={{ width: "100%", position: "absolute", top: 0, zIndex: 50 }}>
+      {/* <div >
         <Navbar users={users} openChatWithUser={openChatWithUser} />
-      </div>
+      </div> */}
 
       {/* Sidebar */}
       <div style={{ width: 260, borderRight: "1px solid #ddd", padding: 12, marginTop: 60 }}>

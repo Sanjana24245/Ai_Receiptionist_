@@ -1,34 +1,37 @@
+
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { Bell, User, LogOut } from "lucide-react";
 import { AuthContext } from "../context/AuthContext"; 
 import { useNavigate } from "react-router-dom";
 import { NotificationContext } from "../context/NotificationContext";
 
-const Navbar = ({ users = [], openChatWithUser }) => {
+const Navbar = ({ openChatWithUser }) => {
   const { user, logout } = useContext(AuthContext);
-  const { unreadCounts } = useContext(NotificationContext);
+  const { unreadCounts, lastMessages, users } = useContext(NotificationContext);
+
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const profileRef = useRef(null);
   const notifRef = useRef(null);
   const navigate = useNavigate();
 
-  // Total unread messages
+  // 🔹 Total unread messages
   const totalUnread = Object.values(unreadCounts || {}).reduce((a, b) => a + b, 0);
 
-  // Build notifications safely
+  // 🔹 Build notifications list
   const notifications = Object.entries(unreadCounts || {})
-    .filter(([userId, count]) => count > 0)
+    .filter(([_, count]) => count > 0)
     .map(([userId, count]) => {
-      const u = users.find((u) => u.id === userId);
+      const u = (users || []).find((u) => u.id === userId) || {};
+      const name = u.username || lastMessages?.[userId]?.sender_name || "Unknown";
       return {
         id: userId,
-        text: `${count} new message${count > 1 ? "s" : ""} from ${u?.username || "Unknown"}`,
-        userId: userId,
+        text: `${count} new message${count > 1 ? "s" : ""} from ${name}`,
+        userId,
       };
     });
 
-  // Close dropdowns on outside click
+  // 🔹 Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -42,27 +45,28 @@ const Navbar = ({ users = [], openChatWithUser }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Logout handler
+  // 🔹 Logout
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
+  // 🔹 Open chat from notification
   const handleClickUser = (userId) => {
     setShowNotifications(false);
-    openChatWithUser(userId); // Open chat with that user
+    openChatWithUser(userId);
   };
 
   return (
-    <div className=" bg-white shadow-md px-6 py-3 flex items-center justify-between relative">
-      {/* Left Section - Logo */}
+    <div className="bg-white shadow-md px-6 py-3 flex items-center justify-between relative">
+      {/* Left - Logo */}
       <div className="flex items-center space-x-2">
         <span className="text-2xl font-bold text-blue-600">🏥 HealthCare</span>
       </div>
 
       {/* Right Section */}
       <div className="flex items-center space-x-6 relative">
-        {/* Notifications */}
+        {/* 🔔 Notifications */}
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
@@ -76,7 +80,7 @@ const Navbar = ({ users = [], openChatWithUser }) => {
             )}
           </button>
 
-          {/* Notifications Dropdown */}
+          {/* Dropdown */}
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg py-2 z-50">
               <p className="px-4 py-2 font-semibold text-gray-700 border-b">
@@ -101,7 +105,7 @@ const Navbar = ({ users = [], openChatWithUser }) => {
           )}
         </div>
 
-        {/* Profile */}
+        {/* 👤 Profile */}
         {user && (
           <div className="relative" ref={profileRef}>
             <button
