@@ -6,7 +6,8 @@ __pycache__/
 
 # Virtual environment
 myenv/
-
+# .gitignore content
+.env
 # IDE / Editor folders
 .vscode/
 .idea/
