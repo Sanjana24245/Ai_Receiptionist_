@@ -9,15 +9,16 @@ export default function Appointment() {
   const [humanAppointments, setHumanAppointments] = useState([]);
   const [aiAppointments, setAiAppointments] = useState([]);
 
-  const [form, setForm] = useState({
-    name: "",
-    age: "",
-    address: "",
-    appointment_time: "",
-    disease: "",
-    doctor_id: "",
-    type: "human",
-  });
+ const [form, setForm] = useState({
+  name: "",
+  age: "",
+  address: "",
+  appointment_time: "",
+  disease: "",
+  doctor_id: "",
+  type: "human",  // keep human/AI only
+});
+
 
   // doctors aur appointments fetch karna
   useEffect(() => {
@@ -35,9 +36,18 @@ export default function Appointment() {
 
         setHumanAppointments(human);
         setAiAppointments(ai);
-      } catch (err) {
-        console.error("Error fetching data", err);
-      }
+      }catch (err) {
+  let errorMsg = "Unknown error";
+  if (err.response?.data?.detail) {
+    if (Array.isArray(err.response.data.detail)) {
+      errorMsg = err.response.data.detail[0]?.msg || JSON.stringify(err.response.data.detail);
+    } else {
+      errorMsg = err.response.data.detail;
+    }
+  }
+  alert("Error booking appointment: " + errorMsg);
+}
+
     };
     fetchData();
   }, []);
@@ -51,33 +61,42 @@ export default function Appointment() {
   };
 
   // appointment book karna
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post("http://localhost:8000/appointments/", form);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await axios.post("http://localhost:8000/appointments/", form);
 
-      if (form.type === "human") {
-        setHumanAppointments((prev) => [...prev, res.data.appointment]);
-      } else {
-        setAiAppointments((prev) => [...prev, res.data.appointment]);
-      }
-
-      alert(res.data.msg);
-
-      // form reset
-      setForm({
-        name: "",
-        age: "",
-        address: "",
-        appointment_time: "",
-        disease: "",
-        doctor_id: "",
-        type: "human",
-      });
-    } catch (err) {
-      alert("Error booking appointment: " + err.response?.data?.detail);
+    if (form.type === "human") {
+      setHumanAppointments((prev) => [...prev, res.data.appointment]);
+    } else {
+      setAiAppointments((prev) => [...prev, res.data.appointment]);
     }
-  };
+
+    alert(res.data.msg);
+
+    // reset form
+    setForm({
+      name: "",
+      age: "",
+      address: "",
+      appointment_time: "",
+      disease: "",
+      doctor_id: "",
+      type: "human",
+    });
+  } catch (err) {
+    let errorMsg = "Unknown error";
+    if (err.response?.data?.detail) {
+      if (Array.isArray(err.response.data.detail)) {
+        errorMsg = err.response.data.detail[0]?.msg || JSON.stringify(err.response.data.detail);
+      } else {
+        errorMsg = err.response.data.detail;
+      }
+    }
+    alert("Error booking appointment: " + errorMsg);
+  }
+};
+
 
   // merge + sort appointments
   const combinedAppointments = [...humanAppointments, ...aiAppointments].sort(

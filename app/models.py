@@ -49,21 +49,18 @@ class Doctor(BaseModel):
 
 class DoctorUpdateStatus(BaseModel):
     status: str
-
 class Appointment(BaseModel):
-    id: Optional[str] = None   
-    type: str = Field(..., pattern="^(human|AI)$")  
+    id: Optional[str] = None
+    type: str = Field(..., pattern="^(human|AI)$")
     name: str
     age: int
     address: str
     appointment_time: datetime
     disease: str
     doctor_id: str
-    user_id: str
+    patient_id: Optional[str] = None  # will be generated server-side
     receptionist_id: Optional[str] = None
     status: str = Field(default="booked")
-    
-    
 class Patient(BaseModel):
     id: Optional[str] = None
     name: str

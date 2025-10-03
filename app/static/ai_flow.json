@@ -1,0 +1,23 @@
+{
+  "greeting": {
+    "messages": [
+      "Hi {name}! Welcome to our hospital chatbot. 🌟",
+      "Hello {name}! I'm your AI assistant. Which location are you at today?"
+    ]
+  },
+  "locations": [
+    {
+      "city": "Delhi",
+      "hospitals": ["City Hospital", "Green Valley Hospital", "Sunrise Medical Center"]
+    },
+    {
+      "city": "Mumbai",
+      "hospitals": ["Mumbai General", "Sunshine Hospital", "Apollo Mumbai"]
+    },
+    {
+      "city": "Bangalore",
+      "hospitals": ["Bangalore Care", "Fortis Hospital", "Manipal Hospital"]
+    }
+  ],
+  "services": ["Appointment", "Emergency", "FAQ"]
+}
