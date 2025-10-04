@@ -16,7 +16,7 @@ const DoctorManagement = () => {
     experience: ''
   });
 
-  const API_URL = 'http://localhost:8000/doctors'; // FastAPI backend
+  const API_URL = 'http://localhost:5000/doctors'; // FastAPI backend
 
   // Fetch doctors on mount
   useEffect(() => {

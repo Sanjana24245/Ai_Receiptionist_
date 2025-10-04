@@ -27,7 +27,7 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
   e.preventDefault();
   try {
-    const res = await axios.post("http://localhost:8000/auth/login", {
+    const res = await axios.post("http://localhost:5000/auth/login", {
       email,
       password,
     });
@@ -54,7 +54,7 @@ export default function LoginForm() {
  const handleGenerateOtp = async (e) => {
   e.preventDefault();
   try {
-    const res = await axios.post("http://localhost:8000/auth/forgot-password/send-otp", { email });
+    const res = await axios.post("http://localhost:5000/auth/forgot-password/send-otp", { email });
     setOtpToken(res.data.otpToken);
     setOtpGenerated(true);
     alert("OTP sent to your email!");
@@ -90,7 +90,7 @@ export default function LoginForm() {
 const handleVerifyOtp = async () => {
   try {
     const otpString = enteredOtp.join('');
-    const res = await axios.post("http://localhost:8000/auth/forgot-password/verify-otp", {
+    const res = await axios.post("http://localhost:5000/auth/forgot-password/verify-otp", {
       otp: otpString,
       otpToken,
     });
@@ -111,7 +111,7 @@ const handleVerifyOtp = async () => {
   }
   try {
     const otpString = enteredOtp.join('');
-    const res = await axios.post("http://localhost:8000/auth/forgot-password/reset", {
+    const res = await axios.post("http://localhost:5000/auth/forgot-password/reset", {
       newPassword,
       otp: otpString,
       otpToken,

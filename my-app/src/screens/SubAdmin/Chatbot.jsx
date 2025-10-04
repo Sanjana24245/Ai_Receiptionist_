@@ -30,10 +30,10 @@ function SubadminChat() {
       console.log("✅ Subadmin connected:", SUBADMIN_ID);
 
       try {
-        const resUsers = await fetch(`http://localhost:8000/chat/users`);
+        const resUsers = await fetch(`http://localhost:5000/chat/users`);
         const usersData = await resUsers.json();
 
-        const resLast = await fetch(`http://localhost:8000/chat/last_messages`);
+        const resLast = await fetch(`http://localhost:5000/chat/last_messages`);
         const lastData = await resLast.json();
         const lastMsgs = lastData.last_messages || {};
         setLastMessages(lastMsgs);
@@ -114,7 +114,7 @@ function SubadminChat() {
       [userId]: 0,
     }));
 
-    fetch(`http://localhost:8000/chat/${userId}`)
+    fetch(`http://localhost:5000/chat/${userId}`)
       .then((res) => res.json())
       .then((data) => {
         let chatMessages = data.messages || [];

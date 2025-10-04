@@ -7,7 +7,7 @@ const PatientManagement = () => {
 
   const fetchPatients = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/patients/list");
+      const res = await axios.get("http://localhost:5000/patients/list");
       setPatients(res.data.patients || []);
       localStorage.setItem("patients", JSON.stringify(res.data.patients || []));
     } catch (err) {
@@ -31,7 +31,7 @@ const PatientManagement = () => {
     formData.append("file", file);
 
     try {
-      await axios.post("http://localhost:8000/patients/upload-excel", formData, {
+      await axios.post("http://localhost:5000/patients/upload-excel", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("Excel file uploaded successfully!");

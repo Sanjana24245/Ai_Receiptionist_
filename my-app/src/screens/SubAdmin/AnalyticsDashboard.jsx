@@ -199,7 +199,7 @@ const AnalyticsDashboard = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/appointments");
+        const res = await axios.get("http://localhost:5000/appointments");
         setAppointments(res.data);
       } catch (err) {
         console.error("Error fetching appointments:", err);

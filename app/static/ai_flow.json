@@ -1,23 +1,26 @@
 {
   "greeting": {
+    "keywords": ["hi", "hello", "hey"],
     "messages": [
-      "Hi {name}! Welcome to our hospital chatbot. 🌟",
-      "Hello {name}! I'm your AI assistant. Which location are you at today?"
+      "👋 Hi there! Welcome to our Hospital Assistant.",
+      "I'm your AI receptionist. You can choose:\n1️⃣ Appointment\n2️⃣ Emergency\n3️⃣ FAQ"
     ]
   },
-  "locations": [
-    {
-      "city": "Delhi",
-      "hospitals": ["City Hospital", "Green Valley Hospital", "Sunrise Medical Center"]
+  "services": {
+    "appointment": {
+      "keywords": ["appointment", "book", "doctor"],
+      "messages": ["You selected Appointment. Please enter your full name:"]
     },
-    {
-      "city": "Mumbai",
-      "hospitals": ["Mumbai General", "Sunshine Hospital", "Apollo Mumbai"]
+    "emergency": {
+      "keywords": ["emergency", "urgent"],
+      "messages": ["🚨 Emergency noted! Our team will contact you shortly."]
     },
-    {
-      "city": "Bangalore",
-      "hospitals": ["Bangalore Care", "Fortis Hospital", "Manipal Hospital"]
+    "faq": {
+      "keywords": ["faq", "help", "question"],
+      "messages": ["Please type your question about doctors or patients."]
     }
-  ],
-  "services": ["Appointment", "Emergency", "FAQ"]
+  },
+  "fallback": {
+    "messages": ["Please choose one option: 1️⃣ Appointment 2️⃣ Emergency 3️⃣ FAQ"]
+  }
 }

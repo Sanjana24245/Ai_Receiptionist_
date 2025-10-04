@@ -9,7 +9,7 @@ const AdminDoctorList = () => {
   // Fetch doctors from FastAPI backend
   const fetchDoctors = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/doctors/");
+      const res = await axios.get("http://localhost:5000/doctors/");
       setDoctors(res.data);
     } catch (error) {
       console.error("Error fetching doctors:", error);

@@ -58,16 +58,16 @@ class Appointment(BaseModel):
     appointment_time: datetime
     disease: str
     doctor_id: str
-    patient_id: Optional[str] = None  # will be generated server-side
+    patient_id: Optional[str] = None  
     receptionist_id: Optional[str] = None
     status: str = Field(default="booked")
 class Patient(BaseModel):
     id: Optional[str] = None
     name: str
     age: int
-    phone: int       # ✅ string ki jagah integer
+    phone: int       
     issue: str
-    lastVisit: str   # abhi string hi rakho (date string)
+    lastVisit: str  
  
 
 class SubAdminRegister(BaseModel):
@@ -84,7 +84,7 @@ class SubAdminResponse(BaseModel):
     contactnumber: str
     isActive: bool
     shift: Optional[str] = None
-    is_online: bool = False      # ✅ receptionist availability
+    is_online: bool = False      
     active_chats: Optional[int] = 0
     max_chats: int = 5  
 
@@ -99,9 +99,9 @@ class ToggleActive(BaseModel):
     isActive: bool
 class Message(BaseModel):
     sender_id: str
-    sender_role: str   # "user" ya "subadmin"
+    sender_role: str   
     text: Optional[str] = None
-    file_url: Optional[str] = None     # ✅ agar file bhejna hai
+    file_url: Optional[str] = None    
     type: str = Field(default="text", pattern="^(text|file|system)$")
     timestamp: datetime = datetime.utcnow()
 
@@ -110,7 +110,7 @@ class Chat(BaseModel):
     
     user_id: str
     subadmin_id: Optional[str] = None 
-    mode: str = Field(default="AI", pattern="^(AI|human)$")# ✅ user kis receptionist ke sath baat kar raha hai
+    mode: str = Field(default="AI", pattern="^(AI|human)$")
     messages: List[Message] = []
     created_at: datetime = datetime.utcnow()
 
@@ -133,9 +133,9 @@ class PyObjectId(ObjectId):
 class CallBase(BaseModel):
     user_id: str
     type: str = Field(..., pattern="^(ai|manual)$")
-    status: str = Field(default="initiated")  # initiated, ongoing, completed, missed
-    duration: Optional[int] = None  # in seconds
-    subadmin_id: Optional[str] = None  # for manual calls
+    status: str = Field(default="initiated") 
+    duration: Optional[int] = None 
+    subadmin_id: Optional[str] = None  
 
 class CallCreate(CallBase):
     pass
@@ -151,7 +151,7 @@ class CallResponse(CallBase):
         json_encoders = {ObjectId: str}
 
 class AICallMessage(BaseModel):
-    role: str  # user or assistant
+    role: str 
     content: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 

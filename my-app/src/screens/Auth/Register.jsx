@@ -50,7 +50,7 @@ const [contactOtpToken, setContactOtpToken] = useState("");
   if (!canSendEmailOtp) return;
 
   try {
-    const res = await axios.post("http://localhost:8000/auth/send-otp", {
+    const res = await axios.post("http://localhost:5000/auth/send-otp", {
       email: form.email,
     });
     setEmailOtpSent(true);
@@ -67,7 +67,7 @@ const [contactOtpToken, setContactOtpToken] = useState("");
 //  const sendContactOtp = async () => {
 //   if (!canSendContactOtp) return;
 //   try {
-//     const res = await axios.post("http://localhost:8000/auth/send-contact-otp", {
+//     const res = await axios.post("http://localhost:5000/auth/send-contact-otp", {
 //       contactnumber: form.contactNumber,
 //     });
 //     setContactOtpSent(true);
@@ -82,7 +82,7 @@ const [contactOtpToken, setContactOtpToken] = useState("");
   // ✅ Verify Email OTP
   const verifyEmailOtp = async () => {
     try {
-      const res = await axios.post("http://localhost:8000/auth/verify-otp", {
+      const res = await axios.post("http://localhost:5000/auth/verify-otp", {
         otpToken,
         otp: emailOtp.join(""), // ✅ join 6 boxes into single string
       });
@@ -96,7 +96,7 @@ const [contactOtpToken, setContactOtpToken] = useState("");
 
 // const verifyContactOtp = async () => {
 //   try {
-//     const res = await axios.post("http://localhost:8000/auth/verify-otp", {
+//     const res = await axios.post("http://localhost:5000/auth/verify-otp", {
 //       otp: contactOtp.join(""),
 //       otpToken: contactOtpToken,
       
@@ -121,7 +121,7 @@ const [contactOtpToken, setContactOtpToken] = useState("");
     }
 
     try {
-      const res = await axios.post("http://localhost:8000/auth/register", {
+      const res = await axios.post("http://localhost:5000/auth/register", {
         username: `${form.firstName} ${form.lastName}`,
         email: form.email,
         contactnumber: form.contactNumber,
@@ -420,7 +420,7 @@ const [contactOtpToken, setContactOtpToken] = useState("");
 //   const sendEmailOtp = async () => {
 //     if (!canSendEmailOtp) return;
 //     try {
-//       const res = await axios.post("http://localhost:8000/auth/send-otp", {
+//       const res = await axios.post("http://localhost:5000/auth/send-otp", {
 //         email: form.email,
 //       });
 //       setEmailOtpSent(true);
@@ -436,7 +436,7 @@ const [contactOtpToken, setContactOtpToken] = useState("");
 //   // Verify Email OTP
 //   const verifyEmailOtp = async () => {
 //     try {
-//       const res = await axios.post("http://localhost:8000/auth/verify-otp", {
+//       const res = await axios.post("http://localhost:5000/auth/verify-otp", {
 //         otpToken,
 //         otp: emailOtp.join(""),
 //       });
@@ -471,10 +471,10 @@ const [contactOtpToken, setContactOtpToken] = useState("");
 //       // Call different API based on role
 //       let res;
 //       if (form.role === 'subadmin') {
-//         res = await axios.post("http://localhost:8000/subadmin/register", payload);
+//         res = await axios.post("http://localhost:5000/subadmin/register", payload);
 //       } else {
 //         payload.role = form.role; // only for admin
-//         res = await axios.post("http://localhost:8000/auth/register", payload);
+//         res = await axios.post("http://localhost:5000/auth/register", payload);
 //       }
 
 //       alert(res.data.msg);

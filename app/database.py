@@ -1,30 +1,35 @@
 
+
 from motor.motor_asyncio import AsyncIOMotorClient
-from .config import MONGO_URI, DB_NAME
 from bson import ObjectId
 from typing import Any
-# MongoDB Client
+from .config import MONGO_URI, DB_NAME
+import certifi
+
+# ---------------------- MongoDB Connection ----------------------
+# Using TLS with certificate verification (recommended for Atlas)
 client = AsyncIOMotorClient(
     MONGO_URI,
     tls=True,
-    tlsAllowInvalidCertificates=False
+    tlsCAFile=certifi.where()
 )
 
-# Database
+# ---------------------- Database ----------------------
 db = client[DB_NAME]
 
-# Collections
+# ---------------------- Collections ----------------------
 users_collection = db["users"]
 doctors_collection = db["doctors"]
 appointments_collection = db["appointments"]
-patients_collection = db["patients"] 
-chats_collection = db["chats"]            # stores chat sessions
-subadmins_collection = db["subadmins"]    # receptionists / human agents
-messages_collection = db["messages"] 
-calls_collection = db["calls"]  # New collection for calls
+patients_collection = db["patients"]
+chats_collection = db["chats"]
+subadmins_collection = db["subadmins"]
+messages_collection = db["messages"]
+calls_collection = db["calls"]
 
-# Helper to convert ObjectId to string
+# ---------------------- ObjectId Helper ----------------------
 def convert_objectid(data: Any) -> Any:
+    """Recursively convert ObjectId instances to strings for JSON output."""
     if isinstance(data, list):
         return [convert_objectid(item) for item in data]
     elif isinstance(data, dict):
