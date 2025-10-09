@@ -107,24 +107,27 @@ async def register(user: UserRegister):
 
 @router.post("/login")
 async def login(data: UserLogin):
-    # Find user by email only
+    # Find user
     user = await users_collection.find_one({"email": data.email})
-
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Verify password
-    if not pwd_context.verify(data.password, user["password"]):
-        raise HTTPException(status_code=400, detail="Password is wrong")
+    # ✅ Verify password correctly
+    try:
+        if not pwd_context.verify(data.password, user["password"]):
+            raise HTTPException(status_code=400, detail="Password is wrong")
+    except ValueError as e:
+        # Handle invalid/old hashes
+        raise HTTPException(status_code=400, detail="Invalid password format in DB — re-register required")
 
-    # BLOCK subadmin if still pending
+    # ✅ Role handling
     if user.get("role") == "subadmin":
         if user.get("isPending", True):
             raise HTTPException(status_code=403, detail="SubAdmin not approved by Admin yet")
         if not user.get("isActive", False):
             raise HTTPException(status_code=403, detail="SubAdmin account is not active")
 
-    # Create JWT token
+    # ✅ Create JWT token
     token = create_access_token({"id": str(user["_id"]), "role": user["role"]})
 
     return {
@@ -140,7 +143,6 @@ async def login(data: UserLogin):
             "isActive": user.get("isActive", False),
         },
     }
-
 # Send OTP
 # app/routes/auth.py
 @router.post("/send-otp")

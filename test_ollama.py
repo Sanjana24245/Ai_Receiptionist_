@@ -3,7 +3,7 @@ import ollama
 def get_ai_reply(user_message: str) -> str:
     try:
         response = ollama.chat(
-            model="llama3:latest",   # ✅ correct model name
+            model="llama3:latest",
             messages=[{"role": "user", "content": user_message}]
         )
         return response["message"]["content"]
