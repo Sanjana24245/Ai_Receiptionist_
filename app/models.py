@@ -41,10 +41,12 @@ class ResetPasswordRequest(BaseModel):
 class Doctor(BaseModel):
     name: str
     specialty: str
+    description: Optional[str] = None   # <-- add this
     timing: str
     status: str = Field(default="present")
     phone: Optional[str] = None
     experience: Optional[str] = None
+    embedding: Optional[List[float]] = None  # <-- store embedding here
 
 
 class DoctorUpdateStatus(BaseModel):
@@ -67,7 +69,8 @@ class Patient(BaseModel):
     age: int
     phone: int       
     issue: str
-    lastVisit: str  
+    lastVisit: str
+    embedding: Optional[List[float]] = None  
  
 
 class SubAdminRegister(BaseModel):
